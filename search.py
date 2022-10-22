@@ -87,11 +87,73 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
+    #states to be explored (LIFO). holds nodes in form (state, action)
+    frontier = util.Stack()
+    #previously explored states (for path checking), holds states
+    exploredNodes = []
+    #define start node
+    startState = problem.getStartState()
+    startNode = (startState, [])
+    
+    frontier.push(startNode)
+    
+    while not frontier.isEmpty():
+        #begin exploring last (most-recently-pushed) node on frontier
+        currentState, actions = frontier.pop()
+        
+        if currentState not in exploredNodes:
+            #mark current node as explored
+            exploredNodes.append(currentState)
+
+            if problem.isGoalState(currentState):
+                return actions
+            else:
+                #get list of possible successor nodes in 
+                #form (successor, action, stepCost)
+                successors = problem.getSuccessors(currentState)
+                
+                #push each successor to frontier
+                for succState, succAction, succCost in successors:
+                    newAction = actions + [succAction]
+                    newNode = (succState, newAction)
+                    frontier.push(newNode)
+
     util.raiseNotDefined()
 
-def breadthFirstSearch(problem):
+def breadthFirstSearch(prob):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+     #to be explored (FIFO)
+    move = util.Queue()
+    
+    #previously expanded states (for cycle checking), holds states
+    nodes = []
+    
+    start = prob.getStartState()
+    startNode = (start, [], 0) #(state, action, cost)
+    
+    move.push(startNode)
+    
+    while not move.isEmpty():
+        #begin exploring first (earliest-pushed) node on frontier
+        currentState, actions, currentCost = move.pop()
+        
+        if currentState not in nodes:
+            #put popped node state into explored list
+            nodes.append(currentState)
+
+            if prob.isGoalState(currentState):
+                return actions
+            else:
+                #list of (successor, action, stepCost)
+                successors = prob.getSuccessors(currentState)
+                
+                for succState, succAction, succCost in successors:
+                    newAction = actions + [succAction]
+                    newCost = currentCost + succCost
+                    newNode = (succState, newAction, newCost)
+
+                    move.push(newNode)
     util.raiseNotDefined()
 
 def uniformCostSearch(problem):
