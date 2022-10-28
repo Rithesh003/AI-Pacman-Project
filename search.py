@@ -1,16 +1,6 @@
-# search.py
-# ---------
-# Licensing Information:  You are free to use or extend these projects for
-# educational purposes provided that (1) you do not distribute or publish
-# solutions, (2) you retain this notice, and (3) you provide clear
-# attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
-# The core projects and autograders were primarily created by John DeNero
-# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
-# Student side autograding was added by Brad Miller, Nick Hay, and
-# Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+# Attribution Information: The AI Pacman projects by Group 27 
+# ( Naveen D, Rithesh Reddy G and Alisha K) were implemented at UCR (Riverside)
 
 """
 In search.py, you will implement generic search algorithms which are called by
@@ -88,109 +78,81 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     #states to be explored (LIFO). holds nodes in form (state, action)
-    frontier = util.Stack()
+    startNode = problem.getStartState()
+    if problem.isGoalState(startNode):
+        return []
+    queue = util.Stack()
     #previously explored states (for path checking), holds states
     exploredNodes = []
     #define start node
-    startState = problem.getStartState()
-    startNode = (startState, [])
-    
-    frontier.push(startNode)
-    
-    while not frontier.isEmpty():
-        #begin exploring last (most-recently-pushed) node on frontier
-        currentState, actions = frontier.pop()
-        
-        if currentState not in exploredNodes:
+    queue.push((startNode,[]))
+    while not queue.isEmpty():
+        #begin exploring last (most-recently-pushed) node on queue
+        currentNode, actions = queue.pop()
+        if currentNode not in exploredNodes:
             #mark current node as explored
-            exploredNodes.append(currentState)
-
-            if problem.isGoalState(currentState):
+            exploredNodes.append(currentNode)
+            if problem.isGoalState(currentNode):
                 return actions
-            else:
-                #get list of possible successor nodes in 
-                #form (successor, action, stepCost)
-                successors = problem.getSuccessors(currentState)
-                
-                #push each successor to frontier
-                for succState, succAction, succCost in successors:
-                    newAction = actions + [succAction]
-                    newNode = (succState, newAction)
-                    frontier.push(newNode)
+            #get list of possible successor nodes in form (successor, action, stepCost)
+            #push each successor to queue
+            for nextNode, action, cost in problem.getSuccessors(currentNode):
+                if nextNode in exploredNodes:
+                    continue
+                queue.push((nextNode, actions + [action]))
 
     util.raiseNotDefined()
 
 def breadthFirstSearch(prob):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-     #to be explored (FIFO)
-    move = util.Queue()
-    
-    #previously expanded states (for cycle checking), holds states
-    nodes = []
-    
-    start = prob.getStartState()
-    startNode = (start, [], 0) #(state, action, cost)
-    
-    move.push(startNode)
-    
-    while not move.isEmpty():
-        #begin exploring first (earliest-pushed) node on frontier
-        currentState, actions, currentCost = move.pop()
-        
-        if currentState not in nodes:
-            #put popped node state into explored list
-            nodes.append(currentState)
+    startNode = prob.getStartState()
+    if prob.isGoalState(startNode):
+        return []
+    queue = util.Queue()
+    exploredNodes = []
+    queue.push((startNode, []))
 
-            if prob.isGoalState(currentState):
+    while not queue.isEmpty():
+        currentNode, actions = queue.pop()
+        if currentNode not in exploredNodes:
+            exploredNodes.append(currentNode)
+            if prob.isGoalState(currentNode):
                 return actions
-            else:
-                #list of (successor, action, stepCost)
-                successors = prob.getSuccessors(currentState)
-                
-                for succState, succAction, succCost in successors:
-                    newAction = actions + [succAction]
-                    newCost = currentCost + succCost
-                    newNode = (succState, newAction, newCost)
-
-                    move.push(newNode)
+            for succState, succAction, succCost in prob.getSuccessors(currentNode):
+                if succState in exploredNodes:
+                    continue
+                queue.push((succState, actions + [succAction]))
     util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    
     #to be explored (FIFO): holds (item, cost)
-    frontier = util.PriorityQueue()
-
-    #previously expanded states (for cycle checking), holds state:cost
-    exploredNodes = {}
-    
     startState = problem.getStartState()
-    startNode = (startState, [], 0) #(state, action, cost)
-    
-    frontier.push(startNode, 0)
+    if problem.isGoalState(startState):
+        return []
+    exploredNodes = []
+    frontier = util.PriorityQueue()
+    #previously expanded states (for cycle checking), holds state:cost
+    frontier.push((startState, [], 0), 0)
     
     while not frontier.isEmpty():
         #begin exploring first (lowest-cost) node on frontier
         currentState, actions, currentCost = frontier.pop()
-       
-        if (currentState not in exploredNodes) or (currentCost < exploredNodes[currentState]):
+        if (currentState not in exploredNodes) :
             #put popped node's state into explored list
-            exploredNodes[currentState] = currentCost
+            exploredNodes.append(currentState)
 
             if problem.isGoalState(currentState):
                 return actions
-            else:
                 #list of (successor, action, stepCost)
-                successors = problem.getSuccessors(currentState)
-                
-                for succState, succAction, succCost in successors:
-                    newAction = actions + [succAction]
-                    newCost = currentCost + succCost
-                    newNode = (succState, newAction, newCost)
+            
+            for succState, succAction, succCost in problem.getSuccessors(currentState):
+                newAction = actions + [succAction]
+                newCost = currentCost + succCost
+                frontier.update((succState, newAction, newCost), newCost)
 
-                    frontier.update(newNode, newCost)
     util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
@@ -202,51 +164,28 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***" #to be explored (FIFO): takes in item, cost+heuristic
-    frontier = util.PriorityQueue()
-
-    exploredNodes = [] #holds (state, cost)
-
+    "*** YOUR CODE HERE ***" 
+    #to be explored (FIFO): takes in item, cost+heuristic
     startState = problem.getStartState()
-    startNode = (startState, [], 0) #(state, action, cost)
-
-    frontier.push(startNode, 0)
-
+    if problem.isGoalState(startState):
+        return []
+    exploredNodes = [] #holds (state, cost)
+    frontier = util.PriorityQueue()
+    frontier.push((startState, [], 0), 0)
     while not frontier.isEmpty():
-
         #begin exploring first (lowest-combined (cost+heuristic) ) node on frontier
         currentState, actions, currentCost = frontier.pop()
-
-        #put popped node into explored list
-        currentNode = (currentState, currentCost)
-        exploredNodes.append((currentState, currentCost))
-
-        if problem.isGoalState(currentState):
-            return actions
-
-        else:
-            #list of (successor, action, stepCost)
-            successors = problem.getSuccessors(currentState)
-
+        if currentState not in exploredNodes:
+            #put popped node into explored list
+            exploredNodes.append(currentState)
+            if problem.isGoalState(currentState):
+                return actions
             #examine each successor
-            for succState, succAction, succCost in successors:
+            for succState, succAction, succCost in problem.getSuccessors(currentState):
                 newAction = actions + [succAction]
-                newCost = problem.getCostOfActions(newAction)
-                newNode = (succState, newAction, newCost)
-
-                #check if this successor has been explored
-                already_explored = False
-                for explored in exploredNodes:
-                    #examine each explored node tuple
-                    exploredState, exploredCost = explored
-
-                    if (succState == exploredState) and (newCost >= exploredCost):
-                        already_explored = True
-
-                #if this successor not explored, put on frontier and explored list
-                if not already_explored:
-                    frontier.push(newNode, newCost + heuristic(succState, problem))
-                    exploredNodes.append((succState, newCost))
+                newCostToNode = currentCost + succCost
+                heuristicCost = newCostToNode + heuristic(succState, problem)
+                frontier.push((succState, newAction, newCostToNode), heuristicCost)
 
     util.raiseNotDefined()
 
