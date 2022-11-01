@@ -110,15 +110,20 @@ def breadthFirstSearch(prob):
     if prob.isGoalState(startNode):
         return []
     queue = util.Queue()
+    #previously explored states (for path checking), holds states
     exploredNodes = []
     queue.push((startNode, []))
 
     while not queue.isEmpty():
+        #begin exploring last (most-recently-pushed) node on queue
         currentNode, actions = queue.pop()
         if currentNode not in exploredNodes:
+            #mark current node as explored
             exploredNodes.append(currentNode)
             if prob.isGoalState(currentNode):
                 return actions
+            #get list of possible successor nodes in form (successor, action, stepCost)
+            #push each successor to queue
             for succState, succAction, succCost in prob.getSuccessors(currentNode):
                 if succState in exploredNodes:
                     continue
